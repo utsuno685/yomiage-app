@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12141c">
+<title>きくドキ — 文書読み上げ</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<!-- ライブラリ画面 -->
+<section id="view-library" class="view active">
+  <header class="app-header">
+    <h1>きくドキ</h1>
+    <button id="btnSettings" class="icon-btn" aria-label="設定">⚙</button>
+  </header>
+  <main class="scroll-area">
+    <div id="docList"></div>
+  </main>
+  <footer class="library-footer">
+    <button id="btnAddFile" class="primary-btn">＋ 文書を追加</button>
+    <input type="file" id="fileInput" accept=".pdf,.docx,.md,.markdown,.txt,.html,.htm" multiple hidden>
+  </footer>
+</section>
+
+<!-- 再生画面 -->
+<section id="view-player" class="view">
+  <header class="app-header">
+    <button id="btnBack" class="icon-btn" aria-label="戻る">←</button>
+    <h2 id="playerTitle" class="player-title"></h2>
+    <button id="btnRename" class="icon-btn" aria-label="タイトル変更">✎</button>
+    <button id="btnToc" class="icon-btn" aria-label="目次">☰</button>
+  </header>
+  <div class="status-row">
+    <span id="engineBadge" class="engine-badge"></span>
+    <div id="statusBar" class="status-bar"></div>
+  </div>
+  <main id="textContainer" class="scroll-area text-container"></main>
+  <footer class="player-controls">
+    <button id="btnPrevSent" class="ctrl-btn" aria-label="前の文">⏮</button>
+    <button id="btnPlay" class="ctrl-btn play" aria-label="再生">▶</button>
+    <button id="btnNextSent" class="ctrl-btn" aria-label="次の文">⏭</button>
+    <select id="speedSelect" aria-label="再生速度">
+      <option value="0.5">0.5×</option>
+      <option value="0.75">0.75×</option>
+      <option value="1" selected>1.0×</option>
+      <option value="1.25">1.25×</option>
+      <option value="1.5">1.5×</option>
+      <option value="1.75">1.75×</option>
+      <option value="2">2.0×</option>
+      <option value="2.5">2.5×</option>
+      <option value="3">3.0×</option>
+    </select>
+  </footer>
+  <aside id="tocDrawer" class="toc-drawer">
+    <div class="toc-header">
+      <span>目次</span>
+      <button id="tocClose" class="icon-btn" aria-label="閉じる">×</button>
+    </div>
+    <div id="tocList" class="toc-list"></div>
+  </aside>
+</section>
+
+<!-- 設定画面 -->
+<section id="view-settings" class="view">
+  <header class="app-header">
+    <button id="btnSettingsBack" class="icon-btn" aria-label="戻る">←</button>
+    <h2>設定</h2>
+  </header>
+  <main class="scroll-area settings-body">
+    <h3>音声合成（Gemini）</h3>
+    <label class="field">
+      <span>Gemini APIキー</span>
+      <input type="password" id="inpApiKey" placeholder="AIza..." autocomplete="off">
+      <small>Google AI Studio（aistudio.google.com）で無料発行できます。キーはこの端末内にのみ保存されます。
+      無料枠では、読み上げる文書のテキストがGoogleのサービス改善に利用されることがあります。機密文書にはご注意ください。</small>
+    </label>
+    <label class="field">
+      <span>TTSモデル</span>
+      <select id="selModel"></select>
+      <small>既定は Flash 系（無料枠で利用可）。Pro 系は従量課金が必要です。</small>
+    </label>
+    <label class="field">
+      <span>話者（声）</span>
+      <select id="selVoice"></select>
+    </label>
+    <label class="field">
+      <span>エンジン</span>
+      <select id="selEngine">
+        <option value="gemini">Gemini TTS（自然な音声・要APIキー）</option>
+        <option value="webspeech">ブラウザ内蔵音声（無料・オフライン可）</option>
+      </select>
+    </label>
+    <label class="field checkbox">
+      <input type="checkbox" id="chkFallback">
+      <span>Geminiが使えないときは内蔵音声に自動で切り替える</span>
+    </label>
+
+    <h3>読み上げルール</h3>
+    <label class="field">
+      <span>URL・リンクの扱い</span>
+      <select id="selUrlMode">
+        <option value="skip">無音で読み飛ばす</option>
+        <option value="announce">「リンクは省略します」と読む</option>
+        <option value="read">そのまま読む</option>
+      </select>
+    </label>
+    <label class="field checkbox">
+      <input type="checkbox" id="chkSkipCode">
+      <span>コードブロックは「省略します」と読む</span>
+    </label>
+    <label class="field checkbox">
+      <input type="checkbox" id="chkSkipRefs">
+      <span>参考文献リスト（References / 参考文献 以降）を読み飛ばす</span>
+    </label>
+
+    <h3>ストレージ・使用量</h3>
+    <p id="cacheInfo" class="info-line"></p>
+    <p id="usageInfo" class="info-line"></p>
+    <button id="btnClearCache" class="danger-btn">音声キャッシュをすべて削除</button>
+    <p class="info-line small">一度合成した音声は端末に保存され、聞き直し・続き再生ではAPIを呼びません（オフライン再生可）。</p>
+  </main>
+</section>
+
+<div id="toast" class="toast"></div>
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
